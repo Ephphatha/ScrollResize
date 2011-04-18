@@ -1,0 +1,3 @@
+LIBRARY ScrollResizeDll
+EXPORTS
+  MouseProc         @1
