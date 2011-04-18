@@ -1,3 +1,17 @@
 
 *.sdf
 *.suo
+/Debug/ScrollResizeDll.lib
+/Debug/ScrollResizeDll.dll
+/Debug/ScrollResize.exe
+/Release/ScrollResizeDll.lib
+/ScrollResize/Debug/ScrollResize.log
+/ScrollResize/Release/ScrollResize.log
+/ScrollResizeDll/Debug/ScrollResizeDll.log
+/ScrollResizeDll/Release/ScrollResizeDll.log
+/Debug
+/ipch
+/ScrollResize/Debug
+/ScrollResize/Release
+/ScrollResizeDll/Debug
+/ScrollResizeDll/Release
