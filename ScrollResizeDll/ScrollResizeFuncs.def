@@ -1,3 +1,4 @@
 LIBRARY ScrollResizeDll
 EXPORTS
   MouseProc         @1
+  LowLevelMouseProc @2

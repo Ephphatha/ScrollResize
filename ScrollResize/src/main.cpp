@@ -24,6 +24,10 @@
 
 #include <Windows.h>
 
+#include "resource.h"
+
+UINT const WMAPP_NOTIFYCALLBACK = WM_APP + 1;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int showCommand)
@@ -34,6 +38,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int
 
   wc.lpfnWndProc   = WindowProc;
   wc.hInstance     = hInstance;
+  wc.hIcon         = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
   wc.lpszClassName = CLASS_NAME;
 
   RegisterClass(&wc);
@@ -60,6 +65,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int
 
     ShowWindow(hwnd, showCommand);
 
+    NOTIFYICONDATA nid = {};
+
+    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.hWnd = hwnd;
+    nid.uID = 0;
+    nid.uCallbackMessage = WMAPP_NOTIFYCALLBACK;
+    nid.uFlags = NIF_ICON | NIF_MESSAGE;
+    nid.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+
+    Shell_NotifyIcon(NIM_ADD, &nid);
+
     // Run the message loop.
 
     MSG msg = { };
@@ -68,6 +84,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    Shell_NotifyIcon(NIM_DELETE, &nid);
 
     return 0;
 }
@@ -109,6 +127,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 
+  case WMAPP_NOTIFYCALLBACK:
+    {
+      HMENU hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
+      if (hMenu)
+      {
+        SetForegroundWindow(hwnd);
+        UINT uFlags = TPM_RIGHTBUTTON;
+        if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
+        {
+          uFlags |= TPM_RIGHTALIGN;
+        }
+        else
+        {
+          uFlags |= TPM_LEFTALIGN;
+        }
+
+        TrackPopupMenuEx(hMenu, uFlags, LOWORD(wParam), HIWORD(wParam), hwnd, NULL);
+        DestroyMenu(hMenu);
+      }
+    }
+
+  case WM_COMMAND:
+    {
+      switch (LOWORD(wParam))
+      {
+      case IDM_EXIT:
+        DestroyWindow(hwnd);
+        break;
+
+      default:
+        break;
+      }
+    }
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
