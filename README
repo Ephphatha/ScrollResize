@@ -1,0 +1,6 @@
+A very simple win32 utility that allows the user to resize a window
+proportionally by hovering the mouse over the titlebar and scrolling up and/or
+down with the mousewheel.
+
+Run ScrollResize.exe with ScrollResizeDll.dll in the same directory to enable
+the functionality, close the program to disable it.
