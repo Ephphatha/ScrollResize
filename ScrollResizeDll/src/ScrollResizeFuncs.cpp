@@ -26,9 +26,6 @@
 
 LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-  static bool onTitleBar = false;
-  static HWND window = NULL;
-
   if (nCode < 0)
   {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -36,11 +33,62 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
   
   MOUSEHOOKSTRUCTEX *hookData = reinterpret_cast<MOUSEHOOKSTRUCTEX*>(lParam);
 
-  switch (wParam)
+  if (wParam = WM_MOUSEWHEEL)
   {
-  case WM_MOUSEWHEEL:
+    HWND window = WindowFromPoint(hookData->pt);
+
+    switch (DefWindowProc(window, WM_NCHITTEST, 0,
+                          MAKELPARAM(hookData->pt.x, hookData->pt.y)))
     {
-      if (onTitleBar)
+    case HTCAPTION:
+    case HTCLOSE:
+    case HTMAXBUTTON:
+    case HTMINBUTTON:
+      {
+        short int delta = GET_WHEEL_DELTA_WPARAM(hookData->mouseData);
+        float scalingFactor = 1.0f + static_cast<float>(delta) / 1200.0f;
+
+        RECT windowRect;
+
+        GetWindowRect(window, &windowRect);
+
+        HDWP hDWP = BeginDeferWindowPos(1);
+        DeferWindowPos(hDWP, window, NULL, 0, 0,
+          static_cast<int>(static_cast<float>(windowRect.right - windowRect.left) * scalingFactor),
+          static_cast<int>(static_cast<float>(windowRect.bottom - windowRect.top) * scalingFactor),
+          SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
+        EndDeferWindowPos(hDWP);
+      }
+      break;
+
+    default:
+      break;
+    }
+  }
+
+  return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+  if (nCode < 0)
+  {
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+  }
+
+  if (wParam == WM_MOUSEWHEEL)
+  {
+    MSLLHOOKSTRUCT *hookData = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
+
+    HWND window = WindowFromPoint(hookData->pt);
+
+    switch (DefWindowProc(window, WM_NCHITTEST, 0,
+                          MAKELPARAM(hookData->pt.x, hookData->pt.y)))
+    {
+    case HTCAPTION:
+    case HTCLOSE:
+    case HTMAXBUTTON:
+    case HTMINBUTTON:
       {
         short int delta = GET_WHEEL_DELTA_WPARAM(hookData->mouseData);
         float scalingFactor = 1.0f + static_cast<float>(delta) / 1200.0f;
@@ -56,52 +104,12 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
           SWP_NOMOVE|SWP_NOZORDER);
         EndDeferWindowPos(hDWP);
       }
+      break;
+
+    default:
+      break;
     }
-    break;
-    
-  default:
-    {
-      if (hookData->wHitTestCode == HTCAPTION)
-      {
-        onTitleBar = true;
-        window = hookData->hwnd;
-      }
-      else
-      {
-        onTitleBar = false;
-      }
-    }
-    break;
   }
 
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
-//
-//LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
-//{
-//  if (nCode < 0)
-//  {
-//    return CallNextHookEx(NULL, nCode, wParam, lParam);
-//  }
-//
-//  if(window && wParam == WM_MOUSEWHEEL)
-//  {
-//    MSLLHOOKSTRUCT *hookData = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
-//
-//    short int delta = GET_WHEEL_DELTA_WPARAM(hookData->mouseData);
-//    float scalingFactor = 1.0f + static_cast<float>(delta) / 1200.0f;
-//
-//    RECT windowRect;
-//
-//    GetWindowRect(window, &windowRect);
-//
-//    HDWP hDWP = BeginDeferWindowPos(1);
-//    DeferWindowPos(hDWP, window, NULL, 0, 0,
-//      static_cast<int>(static_cast<float>(windowRect.right - windowRect.left) * scalingFactor),
-//      static_cast<int>(static_cast<float>(windowRect.bottom - windowRect.top) * scalingFactor),
-//      SWP_NOMOVE|SWP_NOZORDER);
-//    EndDeferWindowPos(hDWP);
-//  }
-//
-//  return CallNextHookEx(NULL, nCode, wParam, lParam);
-//}
