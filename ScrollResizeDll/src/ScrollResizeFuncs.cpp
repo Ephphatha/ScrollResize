@@ -33,7 +33,7 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
   
   MOUSEHOOKSTRUCTEX *hookData = reinterpret_cast<MOUSEHOOKSTRUCTEX*>(lParam);
 
-  if (wParam = WM_MOUSEWHEEL)
+  if (wParam == WM_MOUSEWHEEL)
   {
     HWND window = WindowFromPoint(hookData->pt);
 
@@ -59,7 +59,7 @@ LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
           SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
         EndDeferWindowPos(hDWP);
       }
-      break;
+      return 1; //To prevent message propogation
 
     default:
       break;
@@ -104,7 +104,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
           SWP_NOMOVE|SWP_NOZORDER);
         EndDeferWindowPos(hDWP);
       }
-      break;
+      return 1; //Same reason as above.
 
     default:
       break;

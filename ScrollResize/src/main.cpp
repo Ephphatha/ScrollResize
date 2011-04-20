@@ -63,7 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int
         return 0;
     }
 
-    ShowWindow(hwnd, showCommand);
+    ShowWindow(hwnd, SW_HIDE);
 
     NOTIFYICONDATA nid = {};
 
@@ -129,22 +129,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WMAPP_NOTIFYCALLBACK:
     {
-      HMENU hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
-      if (hMenu)
+      switch (lParam)
       {
-        SetForegroundWindow(hwnd);
-        UINT uFlags = TPM_RIGHTBUTTON;
-        if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
+      case WM_RBUTTONUP:
+      case WM_LBUTTONUP:
+        HMENU hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU1));
+        if (hMenu)
         {
-          uFlags |= TPM_RIGHTALIGN;
-        }
-        else
-        {
-          uFlags |= TPM_LEFTALIGN;
-        }
+          HMENU subMenu = GetSubMenu(hMenu, 0);
+          if (subMenu)
+          {
+            SetForegroundWindow(hwnd);
+            UINT uFlags = TPM_RIGHTBUTTON;
+            if (GetSystemMetrics(SM_MENUDROPALIGNMENT) != 0)
+            {
+              uFlags |= TPM_RIGHTALIGN;
+            }
+            else
+            {
+              uFlags |= TPM_LEFTALIGN;
+            }
 
-        TrackPopupMenuEx(hMenu, uFlags, LOWORD(wParam), HIWORD(wParam), hwnd, NULL);
-        DestroyMenu(hMenu);
+            POINT mouse = {};
+            GetCursorPos(&mouse);
+
+            TrackPopupMenuEx(subMenu, uFlags, mouse.x, mouse.y, hwnd, NULL);
+          }
+          DestroyMenu(hMenu);
+        }
       }
     }
 
@@ -152,7 +164,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
       switch (LOWORD(wParam))
       {
-      case IDM_EXIT:
+      case ID_FILE_EXIT:
         DestroyWindow(hwnd);
         break;
 
