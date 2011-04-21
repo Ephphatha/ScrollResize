@@ -22,6 +22,8 @@
  *  THE SOFTWARE.
  */
 
+#include <fstream>
+
 #include <Windows.h>
 
 #include "resource.h"
@@ -47,10 +49,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE previous, LPSTR lpCmdLine, int
         0,                              // Optional window styles.
         CLASS_NAME,                     // Window class
         L"ScrollResize",    // Window text
-        WS_OVERLAPPEDWINDOW,            // Window style
+        WS_POPUPWINDOW,            // Window style
 
         // Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 
         NULL,       // Parent window    
         NULL,       // Menu
@@ -99,14 +101,36 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
   case WM_CREATE:
     {
-      hinstDLL = LoadLibrary(L"ScrollResizeDll.dll");
-      
-      HOOKPROC hkprcMouseProc = reinterpret_cast<HOOKPROC>(GetProcAddress(hinstDLL, "MouseProc"));
-      DWORD temp;
-      if (hkprcMouseProc == NULL)
-        temp = GetLastError();
+      hinstDLL = LoadLibrary(L"ScrollResizeHook.dll");
 
-      mouseHook = SetWindowsHookEx(WH_MOUSE, hkprcMouseProc, hinstDLL, 0);
+      if (hinstDLL)
+      {
+        HOOKPROC llMouseProc = reinterpret_cast<HOOKPROC>(GetProcAddress(hinstDLL, "LowLevelMouseProc"));
+
+        if (llMouseProc)
+        {
+          mouseHook = SetWindowsHookEx(WH_MOUSE_LL, llMouseProc, hinstDLL, 0);
+        }
+
+        std::ifstream config("config.txt", std::ifstream::in);
+        
+        if (config.is_open())
+        {
+          float resizeFactor = 8.0f;
+
+          if (config.good())
+          {
+            config >> resizeFactor;
+          }
+
+          void (*setRF)(float) = reinterpret_cast<void (*)(float)>(GetProcAddress(hinstDLL, "setResizeFactor"));
+
+          if (setRF)
+          {
+            setRF(resizeFactor);
+          }
+        }
+      }
     }
     return 0;
 
@@ -159,6 +183,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
       }
     }
+    return 0;
 
   case WM_COMMAND:
     {
@@ -172,6 +197,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         break;
       }
     }
+    return 0;
   }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }

@@ -1,0 +1,4 @@
+LIBRARY ScrollResizeHook
+EXPORTS
+  LowLevelMouseProc @1
+  setResizeFactor   @2

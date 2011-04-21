@@ -22,60 +22,38 @@
  *  THE SOFTWARE.
  */
 
-#include "ScrollResizeFuncs.h"
+#include "srHook.h"
 
-LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+float srHook::resizeFactor = 8.0f;
+
+BOOL WINAPI srHookDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
+{
+  static bool attached = false;
+
+  switch (fdwReason)
+  { 
+    case DLL_PROCESS_ATTACH:
+      if (!attached)
+      {
+        srHook::setResizeFactor(8.0f);
+        attached = true;
+      }
+      break;
+
+    case DLL_PROCESS_DETACH:
+      attached = false;
+      break;
+  }
+  return TRUE;
+}
+
+LRESULT CALLBACK srHook::LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
   if (nCode < 0)
   {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
   }
   
-  MOUSEHOOKSTRUCTEX *hookData = reinterpret_cast<MOUSEHOOKSTRUCTEX*>(lParam);
-
-  if (wParam == WM_MOUSEWHEEL)
-  {
-    HWND window = WindowFromPoint(hookData->pt);
-
-    switch (DefWindowProc(window, WM_NCHITTEST, 0,
-                          MAKELPARAM(hookData->pt.x, hookData->pt.y)))
-    {
-    case HTCAPTION:
-    case HTCLOSE:
-    case HTMAXBUTTON:
-    case HTMINBUTTON:
-      {
-        short int delta = GET_WHEEL_DELTA_WPARAM(hookData->mouseData);
-        float scalingFactor = 1.0f + static_cast<float>(delta) / 1200.0f;
-
-        RECT windowRect;
-
-        GetWindowRect(window, &windowRect);
-
-        HDWP hDWP = BeginDeferWindowPos(1);
-        DeferWindowPos(hDWP, window, NULL, 0, 0,
-          static_cast<int>(static_cast<float>(windowRect.right - windowRect.left) * scalingFactor),
-          static_cast<int>(static_cast<float>(windowRect.bottom - windowRect.top) * scalingFactor),
-          SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
-        EndDeferWindowPos(hDWP);
-      }
-      return 1; //To prevent message propogation
-
-    default:
-      break;
-    }
-  }
-
-  return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-
-LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-  if (nCode < 0)
-  {
-    return CallNextHookEx(NULL, nCode, wParam, lParam);
-  }
-
   if (wParam == WM_MOUSEWHEEL)
   {
     MSLLHOOKSTRUCT *hookData = reinterpret_cast<MSLLHOOKSTRUCT*>(lParam);
@@ -91,20 +69,25 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
     case HTMINBUTTON:
       {
         short int delta = GET_WHEEL_DELTA_WPARAM(hookData->mouseData);
-        float scalingFactor = 1.0f + static_cast<float>(delta) / 1200.0f;
+        float mouseTicks = static_cast<float>(delta) / 120.0f;
 
         RECT windowRect;
 
         GetWindowRect(window, &windowRect);
 
+        float width = static_cast<float>(abs(windowRect.right - windowRect.left));
+        float height = static_cast<float>(abs(windowRect.bottom - windowRect.top));
+
+        float ratio = width / height;
+
         HDWP hDWP = BeginDeferWindowPos(1);
         DeferWindowPos(hDWP, window, NULL, 0, 0,
-          static_cast<int>(static_cast<float>(windowRect.right - windowRect.left) * scalingFactor),
-          static_cast<int>(static_cast<float>(windowRect.bottom - windowRect.top) * scalingFactor),
-          SWP_NOMOVE|SWP_NOZORDER);
+          static_cast<int>(width + mouseTicks * resizeFactor * ratio),
+          static_cast<int>(height + mouseTicks * resizeFactor / ratio),
+          SWP_NOACTIVATE|SWP_NOMOVE|SWP_NOZORDER);
         EndDeferWindowPos(hDWP);
       }
-      return 1; //Same reason as above.
+      return 1; //To prevent message propogation
 
     default:
       break;
@@ -112,4 +95,9 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
   }
 
   return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void srHook::setResizeFactor(float resizeFactor)
+{
+  srHook::resizeFactor = resizeFactor;
 }
