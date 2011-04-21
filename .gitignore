@@ -15,3 +15,8 @@
 /ScrollResize/Release
 /ScrollResizeDll/Debug
 /ScrollResizeDll/Release
+
+/ScrollResize/Debug
+/ScrollResize/Release
+/ScrollResizeHook/Debug
+/ScrollResizeHook/Release

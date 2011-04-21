@@ -6,7 +6,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScrollResize", "ScrollResiz
 		{B503F520-A7E4-4C8E-9949-28C62AE8DB68} = {B503F520-A7E4-4C8E-9949-28C62AE8DB68}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScrollResizeDll", "ScrollResizeDll\ScrollResizeDll.vcxproj", "{B503F520-A7E4-4C8E-9949-28C62AE8DB68}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ScrollResizeHook", "ScrollResizeHook\ScrollResizeHook.vcxproj", "{B503F520-A7E4-4C8E-9949-28C62AE8DB68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

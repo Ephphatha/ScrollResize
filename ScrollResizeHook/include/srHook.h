@@ -22,7 +22,21 @@
  *  THE SOFTWARE.
  */
 
+#ifndef __srHook
+#define __srHook
+
 #include <Windows.h>
 
-__declspec(dllexport) LRESULT CALLBACK MouseProc(int nCode, WPARAM wParam, LPARAM lParam);
-__declspec(dllexport) LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
+BOOL WINAPI srHookDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved);
+
+class srHook
+{
+public:
+  __declspec(dllexport) static LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
+
+  __declspec(dllexport) static void setResizeFactor(float resizeFactor);
+
+private:
+  static float resizeFactor;
+};
+#endif
